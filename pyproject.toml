@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "moviedb"
+version = "0.1.0"
+description = "Website to manage movies"
+authors = ["Tom Olivier <contact.tom60@proton.me>"]
+license = "unlicense"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+Flask = "^2.3.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
