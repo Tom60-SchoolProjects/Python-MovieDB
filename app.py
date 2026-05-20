@@ -1,6 +1,5 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, abort
 from flask_sqlalchemy import SQLAlchemy
-import cv2
 import os
 
 app = Flask(__name__)
@@ -22,6 +21,14 @@ class Movie(db.Model):
 with app.app_context():
     db.create_all()
 
+def auth_check():
+    auth = request.authorization
+    if not auth or auth.username != '' or auth.password != '':
+        # On renvoie le code d'erreur HTTP qui déclenche la popup
+        return 'Accès refusé', 401, {'WWW-Authenticate': 'Basic realm="Admin"'}
+    # Si tout est bon, on ne renvoie rien (None)
+    return None
+
 @app.route('/')
 def index():
     # Get all the movies from the database
@@ -38,6 +45,10 @@ def movie(movie_id):
 
 @app.route('/upload', methods=['POST'])
 def upload():
+    # Auth check
+    error = auth_check()
+    if error: return error
+
     # Get the data from the form
     file = request.files['poster']
     title = request.form['title']
@@ -60,6 +71,10 @@ def upload():
 
 @app.route('/movie/<int:movie_id>/delete', methods=['POST'])
 def delete(movie_id):
+    # Auth check
+    error = auth_check()
+    if error: return error
+
     # Get the movie from the database
     movie = Movie.query.get(movie_id)
 
@@ -71,21 +86,16 @@ def delete(movie_id):
 
 @app.route('/detect_faces/<int:movie_id>')
 def detect_faces(movie_id):
+    abort(410, description="Faces detection is not possible because OpenCV is too heavy for this server (Free tier). Run the local version of the app on your machine to use this feature.")
+
     # Get the movie from the database
     movie = Movie.query.get(movie_id)
 
     # Load the image from the static/images folder
     image_path = os.path.join('static/images', movie.poster)
 
-    # Load the image and convert it to grayscale
-    image = cv2.imread(image_path)
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-    # Load the face cascade
-    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-
     # Detect faces in the image
-    faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+    faces = None
     
     return render_template('movie.html.jinja2', movie=movie, faces=faces)
 

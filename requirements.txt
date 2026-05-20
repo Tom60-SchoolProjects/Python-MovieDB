@@ -1,0 +1,2 @@
+flask-sqlalchemy~=3.0 ; python_version >= "3.9" and python_version < "4.0"
+flask~=2.3 ; python_version >= "3.9" and python_version < "4.0"
